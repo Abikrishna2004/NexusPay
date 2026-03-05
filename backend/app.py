@@ -19,6 +19,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'nexus_advanced_production_key_2026')
 CORS(app)
 
+@app.route("/")
+def home():
+    return {
+        "message": "NexusPay Backend Running 🚀"
+    }
+
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(user_bp, url_prefix='/api/users')
