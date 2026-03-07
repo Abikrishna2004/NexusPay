@@ -44,10 +44,10 @@ def login():
         data = request.json
         login_identifier = data.get('email') 
         
-        # We find all matching users natively since multiple admins might share "Admin@CJ"
-        potential_users = list(users_col.find({'$or': [{'email': login_identifier}, {'username': login_identifier}]}))
+        # We find potentially matching users natively (capping search to prevent bcrypt spam)
+        potential_users = list(users_col.find({'$or': [{'email': login_identifier}, {'username': login_identifier}]}).limit(3))
         if not potential_users:
-            potential_users = list(admins_col.find({'$or': [{'email': login_identifier}, {'username': login_identifier}]}))
+            potential_users = list(admins_col.find({'$or': [{'email': login_identifier}, {'username': login_identifier}]}).limit(3))
             
         valid_user = None
         for u in potential_users:

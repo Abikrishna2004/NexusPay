@@ -14,7 +14,7 @@ export default function Home({ user, onLogout }) {
                     <img src="/logo.jpeg" alt="Logo" style={{ width: 30, height: 30, borderRadius: '50%' }} />
                     NexusPay
                 </Link>
-                <div className="nav-links">
+                <div className="nav-links" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
                     {user ? (
                         <>
                             <Link to="/dashboard" className="btn btn-secondary">Dashboard</Link>
@@ -23,7 +23,7 @@ export default function Home({ user, onLogout }) {
                     ) : (
                         <>
                             <Link to="/login" className="btn btn-secondary">Login</Link>
-                            <Link to="/register" className="btn btn-primary" style={{ marginLeft: '10px' }}>Get Started <ArrowRight size={18} /></Link>
+                            <Link to="/register" className="btn btn-primary">Get Started <ArrowRight size={18} /></Link>
                         </>
                     )}
                 </div>
@@ -33,14 +33,14 @@ export default function Home({ user, onLogout }) {
                 <div style={{ display: 'inline-block', padding: '8px 16px', background: 'rgba(0, 229, 255, 0.1)', color: 'var(--accent)', borderRadius: '30px', marginBottom: '20px', fontWeight: 600 }}>
                     The Future of Payments
                 </div>
-                <h1 style={{ fontSize: '4.5rem', marginBottom: '20px', maxWidth: '800px', margin: '0 auto' }}>
+                <h1 className="hero-title" style={{ marginBottom: '20px', maxWidth: '800px', margin: '0 auto', lineHeight: '1.2' }}>
                     Next-Generation <br /> Credit Card Processing
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '30px auto', lineHeight: '1.6' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(1rem, 2vw + 10px, 1.2rem)', maxWidth: '600px', margin: '30px auto', lineHeight: '1.6' }}>
                     Secure, seamless, and lightning-fast payment solutions for modern merchants and consumers. Experience banking without boundaries.
                 </p>
 
-                <div style={{ marginTop: '40px', gap: '20px', display: 'flex', justifyContent: 'center' }}>
+                <div className="hero-buttons" style={{ marginTop: '40px', gap: '20px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
                     <Link to="/register" className="btn btn-primary" style={{ padding: '16px 36px', fontSize: '1.1rem' }}>Open an Account</Link>
                     <a href="#features" className="btn btn-secondary" style={{ padding: '16px 36px', fontSize: '1.1rem' }}>Learn More</a>
                 </div>

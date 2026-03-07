@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, Activity, Users, Shield, Plus, IndianRupee, Bell, RefreshCw, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { CreditCard, Activity, Users, Shield, Plus, IndianRupee, Bell, RefreshCw, FileText, CheckCircle, XCircle, Menu, X } from 'lucide-react';
 import api from '../api';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import CustomDropdown from '../components/CustomDropdown';
@@ -14,6 +14,7 @@ export default function Dashboard({ user, onLogout }) {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('overview'); // overview, cards, pay, users, profile
     const [showCardForm, setShowCardForm] = useState(false);
@@ -30,11 +31,12 @@ export default function Dashboard({ user, onLogout }) {
 
     const loadData = async () => {
         try {
-            const proRes = await api.get('/users/profile');
+            const [proRes, notifsRes] = await Promise.all([
+                api.get('/users/profile'),
+                api.get('/notifications')
+            ]);
             setProfile(proRes.data);
             setProfileForm({ phone: proRes.data.phone || '', address: proRes.data.address || '', avatar: proRes.data.avatar || '' });
-
-            const notifsRes = await api.get('/notifications');
             setNotifications(notifsRes.data);
 
             if (user.role === 'Admin') {
@@ -44,7 +46,7 @@ export default function Dashboard({ user, onLogout }) {
                 setStats(statRes.data);
                 setTransactions(txRes.data);
                 setAdminUsers(usrRes.data);
-                setCards(crdRes.data); // Admin sees all cards
+                setCards(crdRes.data);
             } else if (user.role === 'Customer') {
                 const [cardRes, txRes, merchRes] = await Promise.all([
                     api.get('/cards'), api.get('/transactions'), api.get('/merchants')
@@ -236,54 +238,61 @@ export default function Dashboard({ user, onLogout }) {
 
     return (
         <div className="dashboard-layout animate-fade-in">
-            <div className="sidebar" style={{ overflowY: 'auto' }}>
-                <div style={{ marginBottom: '30px' }}>
-                    <h2 style={{ fontSize: '1.5rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <img src="/logo.jpeg" alt="Logo" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />
-                        NexusPay
-                    </h2>
-                    <div style={{ fontSize: '0.8rem', color: profile.status === 'Active' ? 'var(--success)' : 'var(--danger)', marginTop: '5px' }}>
-                        {user.role} | {profile.status}
+            <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{ overflowY: 'auto' }}>
+                <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.5rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img src="/logo.jpeg" alt="Logo" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />
+                            NexusPay
+                        </h2>
+                        <div style={{ fontSize: '0.8rem', color: profile.status === 'Active' ? 'var(--success)' : 'var(--danger)', marginTop: '5px' }}>
+                            {user.role} | {profile.status}
+                        </div>
                     </div>
+                    <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} style={{ display: 'none', background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
                 </div>
 
-                <button className={`sidebar-link ${view === 'overview' ? 'active' : ''}`} onClick={() => setView('overview')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                    <Activity size={20} /> Overview Hub
-                </button>
+                <div className="sidebar-links-container" style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
 
-                {user.role === 'Customer' && (
-                    <>
-                        <button className={`sidebar-link ${view === 'cards' ? 'active' : ''}`} onClick={() => setView('cards')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                            <CreditCard size={20} /> Wallet & Cards
-                        </button>
-                        <button className={`sidebar-link ${view === 'pay' ? 'active' : ''}`} onClick={() => setView('pay')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                            <IndianRupee size={20} /> Send Payment
-                        </button>
-                    </>
-                )}
-                {user.role === 'Admin' && (
-                    <>
-                        <button className={`sidebar-link ${view === 'users' ? 'active' : ''}`} onClick={() => setView('users')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                            <Users size={20} /> System Users
-                        </button>
-                        <button className={`sidebar-link ${view === 'cards' ? 'active' : ''}`} onClick={() => setView('cards')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                            <CreditCard size={20} /> Global Cards
-                        </button>
-                    </>
-                )}
-
-                {(user.role === 'Customer' || user.role === 'Admin') && (
-                    <button className={`sidebar-link ${view === 'profile' ? 'active' : ''}`} onClick={() => setView('profile')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                        <FileText size={20} /> {user.role === 'Customer' ? 'Identity & KYC' : 'Profile Settings'}
+                    <button className={`sidebar-link ${view === 'overview' ? 'active' : ''}`} onClick={() => setView('overview')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                        <Activity size={20} /> Overview Hub
                     </button>
-                )}
 
-                {user.role === 'Merchant' && (
-                    <button className={`sidebar-link ${view === 'transactions' ? 'active' : ''}`} onClick={() => setView('transactions')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
-                        <FileText size={20} /> Invoices & Refunds
-                    </button>
-                )}
+                    {user.role === 'Customer' && (
+                        <>
+                            <button className={`sidebar-link ${view === 'cards' ? 'active' : ''}`} onClick={() => setView('cards')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                                <CreditCard size={20} /> Wallet & Cards
+                            </button>
+                            <button className={`sidebar-link ${view === 'pay' ? 'active' : ''}`} onClick={() => setView('pay')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                                <IndianRupee size={20} /> Send Payment
+                            </button>
+                        </>
+                    )}
+                    {user.role === 'Admin' && (
+                        <>
+                            <button className={`sidebar-link ${view === 'users' ? 'active' : ''}`} onClick={() => setView('users')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                                <Users size={20} /> System Users
+                            </button>
+                            <button className={`sidebar-link ${view === 'cards' ? 'active' : ''}`} onClick={() => setView('cards')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                                <CreditCard size={20} /> Global Cards
+                            </button>
+                        </>
+                    )}
 
+                    {(user.role === 'Customer' || user.role === 'Admin') && (
+                        <button className={`sidebar-link ${view === 'profile' ? 'active' : ''}`} onClick={() => setView('profile')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                            <FileText size={20} /> {user.role === 'Customer' ? 'Identity & KYC' : 'Profile Settings'}
+                        </button>
+                    )}
+
+                    {user.role === 'Merchant' && (
+                        <button className={`sidebar-link ${view === 'transactions' ? 'active' : ''}`} onClick={() => setView('transactions')} style={{ background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', width: '100%' }}>
+                            <FileText size={20} /> Invoices & Refunds
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="main-content">
@@ -360,10 +369,10 @@ export default function Dashboard({ user, onLogout }) {
                                     <h2>{stats.flagged_transactions}</h2>
                                 </div>
 
-                                <div className="glass-panel" style={{ gridColumn: '1 / span 2', background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.2)' }}>
+                                <div className="glass-panel admin-stat-huge" style={{ background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.2)' }}>
                                     <div style={{ fontSize: '0.9rem', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '1px', fontWeight: 600 }}>Total Credit Extended By Platform</div>
-                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '15px' }}>
-                                        <h2 style={{ fontSize: '2.5rem', marginBottom: 0 }}>₹{stats.total_credit_extended.toFixed(2)}</h2>
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', flexWrap: 'wrap' }}>
+                                        <h2 style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)', marginBottom: 0 }}>₹{stats.total_credit_extended.toFixed(2)}</h2>
                                         <div style={{ color: 'var(--text-muted)', paddingBottom: '6px' }}>Across {stats.total_active_cards} cards</div>
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: '#ffab00', marginTop: '10px' }}>
@@ -371,10 +380,10 @@ export default function Dashboard({ user, onLogout }) {
                                     </div>
                                 </div>
 
-                                <div className="glass-panel" style={{ gridColumn: '3 / span 2', background: 'rgba(46, 213, 115, 0.05)', border: '1px solid rgba(46, 213, 115, 0.2)' }}>
+                                <div className="glass-panel admin-stat-huge" style={{ background: 'rgba(46, 213, 115, 0.05)', border: '1px solid rgba(46, 213, 115, 0.2)' }}>
                                     <div style={{ fontSize: '0.9rem', color: 'var(--success)', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '1px', fontWeight: 600 }}>Money Successfully Recovered</div>
                                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '15px' }}>
-                                        <h2 style={{ fontSize: '2.5rem', marginBottom: 0, color: 'var(--success)' }}>₹{stats.total_repaid_historically?.toFixed(2) || '0.00'}</h2>
+                                        <h2 style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)', marginBottom: 0, color: 'var(--success)', wordBreak: 'break-all' }}>₹{stats.total_repaid_historically?.toFixed(2) || '0.00'}</h2>
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '10px' }}>
                                         Total liquid cash users have settled back to NexusPay to clear their debts historically.
@@ -976,7 +985,29 @@ export default function Dashboard({ user, onLogout }) {
                 {view === 'profile' && (
                     <div className="grid grid-cols-2">
                         <div className="glass-panel" style={{ gridColumn: '1 / -1', marginBottom: '20px' }}>
-                            <h3>Personal Information</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                                <h3>Account Information</h3>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
+                                    <div style={{ flex: '0 0 auto', width: '120px', height: '120px', borderRadius: '50%', background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '3px solid var(--accent)' }}>
+                                        {profileForm.avatar || profile.avatar ? (
+                                            <img src={profileForm.avatar || profile.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <span style={{ fontSize: '3rem', color: '#fff', fontWeight: 'bold' }}>{profile.name?.charAt(0)}</span>
+                                        )}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: '250px' }}>
+                                        <h2 style={{ marginBottom: '10px' }}>{profile.name} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>({profile.username})</span></h2>
+                                        <div style={{ color: 'var(--text-muted)', marginBottom: '5px' }}><strong>Email:</strong> {profile.email}</div>
+                                        <div style={{ color: 'var(--text-muted)', marginBottom: '5px' }}><strong>Role:</strong> {profile.role}</div>
+                                        <div style={{ color: 'var(--text-muted)', marginBottom: '5px' }}><strong>Status:</strong> <span style={{ color: profile.status === 'Active' ? 'var(--success)' : 'var(--danger)' }}>{profile.status}</span></div>
+                                        {profile.created_at && <div style={{ color: 'var(--text-muted)' }}><strong>Joined:</strong> {new Date(profile.created_at).toLocaleDateString()}</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel" style={{ marginBottom: '20px' }}>
+                            <h3>Update Profile Details</h3>
                             <form onSubmit={handleProfileSave} style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '20px' }}>
                                 <div className="form-group" style={{ flex: '1 1 100%' }}>
                                     <label>Profile Avatar</label>
@@ -985,11 +1016,7 @@ export default function Dashboard({ user, onLogout }) {
                                         onDragOver={preventDrag}
                                         style={{ border: '2px dashed var(--accent)', padding: '20px', textAlign: 'center', borderRadius: '8px', cursor: 'pointer', background: 'rgba(0,0,0,0.2)' }}
                                     >
-                                        {profileForm.avatar ? (
-                                            <img src={profileForm.avatar} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 10px' }} />
-                                        ) : (
-                                            <div style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>Drag & Drop Image Here or Click to Browse</div>
-                                        )}
+                                        <div style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>Drag & Drop Image Here</div>
                                         <input type="file" accept="image/*" onChange={handleAvatarDrop} style={{ display: 'none' }} id="avatarUpload" />
                                         <label htmlFor="avatarUpload" className="btn btn-secondary" style={{ padding: '5px 15px', fontSize: '0.8rem', cursor: 'pointer', display: 'inline-block' }}>Select Image File</label>
                                     </div>
@@ -1002,12 +1029,12 @@ export default function Dashboard({ user, onLogout }) {
                                     <label>Physical Address</label>
                                     <textarea className="form-control" placeholder="Enter Full Residential Address..." value={profileForm.address} onChange={e => setProfileForm({ ...profileForm, address: e.target.value })}></textarea>
                                 </div>
-                                <button type="submit" className="btn btn-primary" style={{ padding: '10px 30px' }}>Save Details</button>
+                                <button type="submit" className="btn btn-primary" style={{ padding: '10px 30px', width: '100%' }}>Save Details</button>
                             </form>
                         </div>
 
                         {user.role === 'Customer' && (
-                            <div className="glass-panel">
+                            <div className="glass-panel" style={{ marginBottom: '20px' }}>
                                 <h3>Identity Verification (KYC)</h3>
                                 <p style={{ marginTop: '15px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
                                     To unlock higher spending limits and full platform access, federal regulations require us to verify your identity.
@@ -1027,7 +1054,7 @@ export default function Dashboard({ user, onLogout }) {
                                 </div>
                             </div>
                         )}
-                        <div className="glass-panel">
+                        <div className="glass-panel" style={{ gridColumn: '1 / -1' }}>
                             <h3>Security Preferences</h3>
                             <div style={{ marginTop: '25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                                 <div>

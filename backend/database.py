@@ -21,8 +21,14 @@ def init_db():
     try:
         users_col.create_index("email", unique=True)
         users_col.create_index("id", unique=True)
+        users_col.create_index("role")
         cards_col.create_index("id", unique=True)
+        cards_col.create_index("user_id")
         transactions_col.create_index("id", unique=True)
+        transactions_col.create_index("customer_id")
+        transactions_col.create_index("merchant_id")
+        notifications_col.create_index("user_id")
+        audit_col.create_index("user_id")
         print("Connected to MongoDB Atlas and verified indexing.")
     except Exception as e:
         print(f"MongoDB Boot Error: {e}")
