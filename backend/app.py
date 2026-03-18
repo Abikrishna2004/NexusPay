@@ -1,4 +1,9 @@
 import os
+import sys
+
+# Add the backend directory to the Python path for Vercel Serverless
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import bcrypt
 import uvicorn
 from a2wsgi import WSGIMiddleware
