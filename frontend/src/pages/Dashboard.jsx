@@ -305,9 +305,12 @@ export default function Dashboard({ user, onLogout }) {
                                         ? (cards.filter(c => c.status === 'Active').reduce((sum, card) => sum + card.balance, 0)).toFixed(2)
                                         : profile.balance.toFixed(2)}
                                 </span>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '2px', opacity: 0.8 }}>
+                                    Next Resupply: {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                                </div>
                                 {user.role === 'Customer' && (cards.reduce((sum, c) => sum + (c.debt || 0), 0) > 0) && (
                                     <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '2px' }}>
-                                        Owed: ₹{cards.reduce((sum, c) => sum + (c.debt || 0), 0).toFixed(2)}
+                                        Outstanding Debt: ₹{cards.reduce((sum, c) => sum + (c.debt || 0), 0).toFixed(2)}
                                     </div>
                                 )}
                             </div>
