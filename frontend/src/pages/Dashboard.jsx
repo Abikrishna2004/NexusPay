@@ -311,7 +311,7 @@ export default function Dashboard({ user, onLogout }) {
                             <Bell size={24} style={{ color: notifications.filter(n => !n.read).length > 0 ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', marginTop: '5px' }} onClick={handleReadNotifs} />
                             {notifications.filter(n => !n.read).length > 0 && <span style={{ position: 'absolute', top: -0, right: -5, background: 'var(--danger)', color: 'white', fontSize: '10px', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{notifications.filter(n => !n.read).length}</span>}
                             {showNotifications && (
-                                <div className="glass-panel" style={{ position: 'absolute', top: '40px', right: 0, width: '320px', zIndex: 1000, padding: 0, maxHeight: '400px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                                <div className="glass-panel nav-dropdown notif-panel">
                                     <div style={{ padding: '15px', borderBottom: '1px solid var(--border-color)', fontWeight: 600 }}>System Notifications</div>
                                     {notifications.length === 0 ? <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No notifications</div> : (
                                         <div style={{ padding: '10px' }}>
@@ -332,7 +332,7 @@ export default function Dashboard({ user, onLogout }) {
                                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{profile.name}</span>
                             </div>
                             {showProfileMenu && (
-                                <div className="glass-panel" style={{ position: 'absolute', top: '50px', right: 0, width: '200px', zIndex: 1000, padding: '10px 0', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                                <div className="glass-panel nav-dropdown profile-panel">
                                     {user.role === 'Customer' && (
                                         <>
                                             <button onClick={() => { setView('profile'); setShowProfileMenu(false); }} style={{ width: '100%', padding: '10px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>Profile Details</button>

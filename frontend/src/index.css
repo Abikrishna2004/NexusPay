@@ -713,3 +713,47 @@ table {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* Dropdown Panel Responsiveness */
+.nav-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.notif-panel {
+  width: 320px;
+  padding: 0 !important;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.profile-panel {
+  width: 200px;
+  padding: 10px 0 !important;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .notif-panel {
+    width: 280px;
+    right: -60px; /* Shift left to avoid edge clash */
+  }
+  
+  .profile-panel {
+    right: 0;
+  }
+}
