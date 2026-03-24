@@ -889,18 +889,30 @@ export default function Dashboard({ user, onLogout }) {
                                         <td>{u.email}</td>
                                         <td>{u.role}</td>
                                         <td>
-                                            <select className="form-control" style={{ padding: '5px', width: 'auto', background: 'transparent', borderColor: 'rgba(255,255,255,0.1)' }} value={u.kyc_status || 'Pending'} onChange={(e) => handleUserUpdate(u.id, { kyc_status: e.target.value })}>
-                                                <option value="Pending">Pending</option>
-                                                <option value="Under Review">Under Review</option>
-                                                <option value="Approved">Approved</option>
-                                                <option value="Rejected">Rejected</option>
-                                            </select>
+                                            <div style={{ width: '150px' }}>
+                                                <CustomDropdown
+                                                    options={[
+                                                        { value: 'Pending', label: 'Pending' },
+                                                        { value: 'Under Review', label: 'Under Review' },
+                                                        { value: 'Approved', label: 'Approved' },
+                                                        { value: 'Rejected', label: 'Rejected' }
+                                                    ]}
+                                                    value={u.kyc_status || 'Pending'}
+                                                    onChange={(val) => handleUserUpdate(u.id, { kyc_status: val })}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
-                                            <select className="form-control" style={{ padding: '5px', width: 'auto', background: 'transparent', borderColor: 'rgba(255,255,255,0.1)' }} value={u.status} onChange={(e) => handleUserUpdate(u.id, { status: e.target.value })}>
-                                                <option value="Active">Active</option>
-                                                <option value="Blocked">Blocked</option>
-                                            </select>
+                                            <div style={{ width: '130px' }}>
+                                                <CustomDropdown
+                                                    options={[
+                                                        { value: 'Active', label: 'Active' },
+                                                        { value: 'Blocked', label: 'Blocked' }
+                                                    ]}
+                                                    value={u.status}
+                                                    onChange={(val) => handleUserUpdate(u.id, { status: val })}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
                                             <button className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: '0.8rem' }} onClick={() => handleViewUserDetails(u)}>View Analytics</button>
