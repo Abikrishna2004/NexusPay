@@ -105,7 +105,7 @@ export default function Dashboard({ user, onLogout }) {
         try {
             await api.post(`/cards/${cardId}/repay`, { amount: parseFloat(repayAmount) });
             loadData();
-            showMsg('Payment applied successfully! Limit Restored.');
+            showMsg('Payment applied successfully! Debt cleared.');
         } catch (e) { showMsg(e.response?.data?.message || 'Repayment failed.'); }
     };
 
@@ -544,7 +544,7 @@ export default function Dashboard({ user, onLogout }) {
                                         </h4>
                                         <div className="grid grid-cols-2">
                                             {cards.filter(c => c.user_id === u.id).map(card => {
-                                                const amountOwed = Math.max(0, card.spending_limit - card.balance);
+                                                const amountOwed = card.debt || 0;
                                                 return (
                                                     <div key={card.id} className="credit-card" style={{ filter: card.status !== 'Active' ? 'grayscale(1)' : 'none' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -579,7 +579,7 @@ export default function Dashboard({ user, onLogout }) {
                         ) : (
                             <div className="grid grid-cols-2">
                                 {cards.map(card => {
-                                    const amountOwed = Math.max(0, card.spending_limit - card.balance);
+                                    const amountOwed = card.debt || 0;
                                     return (
                                         <div key={card.id} className="credit-card" style={{ filter: card.status !== 'Active' ? 'grayscale(1)' : 'none' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -834,15 +834,15 @@ export default function Dashboard({ user, onLogout }) {
 
                         <div className="glass-panel">
                             <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Repay Borrowed Credit Limit</h3>
-                            {cards.filter(c => c.status === 'Active' && c.spending_limit > c.balance).length === 0 ? (
+                            {cards.filter(c => c.status === 'Active' && (c.debt || 0) > 0).length === 0 ? (
                                 <div style={{ textAlign: 'center', color: 'var(--success)', padding: '20px' }}>You have no outstanding borrowed amounts!</div>
                             ) : (
                                 <div>
                                     <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem', textAlign: 'center', lineHeight: '1.5' }}>
                                         When you spend on your card, you borrow money. Pay it back within the time limit.
                                     </p>
-                                    {cards.filter(c => c.status === 'Active' && c.spending_limit > c.balance).map(card => {
-                                        const amountOwed = card.spending_limit - card.balance;
+                                    {cards.filter(c => c.status === 'Active' && (c.debt || 0) > 0).map(card => {
+                                        const amountOwed = card.debt || 0;
                                         return (
                                             <div key={card.id} style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px', marginBottom: '15px', background: 'rgba(0,0,0,0.2)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
