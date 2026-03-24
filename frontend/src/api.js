@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://nexus-pay-alpha.vercel.app/api',
+    baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://nexus-pay-alpha.vercel.app/api',
 });
 
 api.interceptors.request.use((config) => {
