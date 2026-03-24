@@ -868,7 +868,7 @@ export default function Dashboard({ user, onLogout }) {
                 )}
 
                 {view === 'users' && user.role === 'Admin' && (
-                    <div className="glass-panel" style={{ padding: 0, overflowX: 'auto' }}>
+                    <div className="glass-panel" style={{ padding: 0, overflow: 'visible', minHeight: '400px' }}>
                         <table>
                             <thead>
                                 <tr>
@@ -888,7 +888,7 @@ export default function Dashboard({ user, onLogout }) {
                                         <td style={{ fontWeight: 600 }}>{u.name}</td>
                                         <td>{u.email}</td>
                                         <td>{u.role}</td>
-                                        <td>
+                                        <td style={{ position: 'relative', zIndex: 10 }}>
                                             <div style={{ width: '150px' }}>
                                                 <CustomDropdown
                                                     options={[
@@ -902,7 +902,7 @@ export default function Dashboard({ user, onLogout }) {
                                                 />
                                             </div>
                                         </td>
-                                        <td>
+                                        <td style={{ position: 'relative', zIndex: 10 }}>
                                             <div style={{ width: '130px' }}>
                                                 <CustomDropdown
                                                     options={[
