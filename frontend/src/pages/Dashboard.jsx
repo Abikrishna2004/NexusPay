@@ -298,13 +298,18 @@ export default function Dashboard({ user, onLogout }) {
                     <h1>{view === 'overview' ? 'Dashboard Overview' : view === 'cards' ? 'Card Operations' : view === 'pay' ? 'Process Secure Payment' : view === 'users' ? 'User Administration' : view === 'transactions' ? 'Transaction Log' : 'Profile Settings'}</h1>
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                         {user.role !== 'Admin' && (
-                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px 20px', borderRadius: '30px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ color: 'var(--text-muted)' }}>Balance: </span>
+                            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Available This Month</div>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--accent)' }}>
                                     ₹{user.role === 'Customer'
-                                        ? cards.filter(c => c.status === 'Active').reduce((sum, card) => sum + card.balance, 0).toFixed(2)
+                                        ? (cards.filter(c => c.status === 'Active').reduce((sum, card) => sum + card.balance, 0)).toFixed(2)
                                         : profile.balance.toFixed(2)}
                                 </span>
+                                {user.role === 'Customer' && (cards.reduce((sum, c) => sum + (c.debt || 0), 0) > 0) && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '2px' }}>
+                                        Owed: ₹{cards.reduce((sum, c) => sum + (c.debt || 0), 0).toFixed(2)}
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div style={{ position: 'relative' }}>

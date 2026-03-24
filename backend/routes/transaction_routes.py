@@ -38,14 +38,16 @@ def handle_transactions(current_user):
         
         tx_status = "Completed"
 
-        card_update = {'$inc': {'balance': -amount}}
+        # Update Card: Decrease monthly balance, Increase total debt
+        card_update = {'$inc': {'balance': -amount, 'debt': amount}}
         if card['balance'] >= card['spending_limit']:
             card_update['$set'] = {'repayment_due_date': (datetime.datetime.utcnow() + datetime.timedelta(days=30)).isoformat()}
             
         cards_col.update_one({'id': card_id}, card_update)
         if not qr_parsed:
             users_col.update_one({'id': merchant_id}, {'$inc': {'balance': amount}})
-        users_col.update_one({'id': current_user['id']}, {'$inc': {'balance': -amount}})
+        # Removed redundant wallet deduction for Customer to avoid confusion
+        # users_col.update_one({'id': current_user['id']}, {'$inc': {'balance': -amount}})
         
         tx_id = generate_id()
         transaction = {

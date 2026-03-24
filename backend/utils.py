@@ -3,7 +3,19 @@ import datetime
 from flask import request, jsonify, current_app
 import jwt
 from functools import wraps
-from database import users_col, admins_col, audit_col, notifications_col
+from database import users_col, admins_col, audit_col, notifications_col, cards_col
+
+def check_refresh(card):
+    now = datetime.datetime.utcnow()
+    current_month_key = now.year * 100 + now.month
+    if card.get('last_refresh_month') != current_month_key:
+        cards_col.update_one({'id': card['id']}, {'$set': {
+            'balance': card['spending_limit'], 
+            'last_refresh_month': current_month_key
+        }})
+        card['balance'] = card['spending_limit']
+        card['last_refresh_month'] = current_month_key
+    return card
 
 def generate_id():
     return str(uuid.uuid4())

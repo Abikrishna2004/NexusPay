@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import datetime
-from database import cards_col, users_col
-from utils import token_required, generate_id, log_activity, create_notification
+from database import cards_col, users_col, transactions_col
+from utils import token_required, generate_id, log_activity, create_notification, check_refresh
 
 card_bp = Blueprint('cards', __name__)
 
@@ -15,17 +15,20 @@ def cards(current_user):
         card_id = generate_id()
         
         limit_requested = float(data.get('spending_limit', 5000))
+        now = datetime.datetime.utcnow()
         new_card = {
             "id": card_id,
             "user_id": current_user['id'],
-            "card_number": "4000 1234 " + str(int(datetime.datetime.utcnow().timestamp()))[-8:],
-            "expiry": (datetime.datetime.utcnow() + datetime.timedelta(days=3*365)).strftime("%m/%y"),
-            "cvv": str(int(datetime.datetime.utcnow().timestamp()))[-3:],
+            "card_number": "4000 1234 " + str(int(now.timestamp()))[-8:],
+            "expiry": (now + datetime.timedelta(days=3*365)).strftime("%m/%y"),
+            "cvv": str(int(now.timestamp()))[-3:],
             "type": data.get('type', 'Virtual'),
             "status": "Pending Approval",
             "spending_limit": limit_requested,
             "balance": limit_requested,
-            "created_at": datetime.datetime.utcnow().isoformat()
+            "debt": 0.0,
+            "last_refresh_month": now.year * 100 + now.month,
+            "created_at": now.isoformat()
         }
         cards_col.insert_one(new_card)
         log_activity(current_user['id'], "REQUESTED_CARD", f"Requested {new_card['type']} Card ending in {new_card['card_number'][-4:]}")
@@ -33,11 +36,11 @@ def cards(current_user):
         new_card.pop('_id', None)
         return jsonify({"message": "Card requested successfully. Awaiting Admin allocation.", "card": new_card}), 201
     
-    if current_user['role'] == 'Admin':
-        all_cards = list(cards_col.find({}, {'_id': 0}))
-        return jsonify(all_cards)
-    
-    user_cards = list(cards_col.find({'user_id': current_user['id']}, {'_id': 0}))
+    # Refresh logic on GET
+    query = {} if current_user['role'] == 'Admin' else {'user_id': current_user['id']}
+    user_cards = list(cards_col.find(query, {'_id': 0}))
+    for c in user_cards:
+        check_refresh(c)
     return jsonify(user_cards)
 
 @card_bp.route('/<card_id>', methods=['PUT', 'DELETE'])
@@ -58,8 +61,12 @@ def update_card(current_user, card_id):
     if 'status' in data: 
         updates['status'] = data['status']
         if current_user['role'] == 'Admin' and data['status'] == 'Active' and card['status'] == 'Pending Approval':
-            users_col.update_one({'id': card['user_id']}, {'$inc': {'balance': card['spending_limit']}})
-    if 'spending_limit' in data: updates['spending_limit'] = float(data['spending_limit'])
+            # Remove wallet balance bonus as limit belongs to card
+            pass
+    if 'spending_limit' in data: 
+        updates['spending_limit'] = float(data['spending_limit'])
+        if card['balance'] > float(data['spending_limit']):
+            updates['balance'] = float(data['spending_limit'])
     
     cards_col.update_one({'id': card_id}, {'$set': updates})
     return jsonify({"message": "Card configuration updated!"})
@@ -68,19 +75,27 @@ def update_card(current_user, card_id):
 @token_required
 def repay_card(current_user, card_id):
     card = cards_col.find_one({'id': card_id})
-    if not card: return jsonify({"message": "Card not found"}), 404
-    if card['user_id'] != current_user['id']: return jsonify({"message": "Unauthorized"}), 403
+    if not card or card['user_id'] != current_user['id']: 
+        return jsonify({"message": "Unauthorized"}), 403
     
     amount = float(request.json.get('amount', 0))
     if amount <= 0: return jsonify({"message": "Invalid amount"}), 400
     
-    new_balance = min(card['balance'] + amount, card['spending_limit'])
+    # Repayment logic for debt (Non-refilling)
+    cards_col.update_one({'id': card_id}, {'$inc': {'debt': -amount}})
     
-    update_doc = {'$set': {'balance': new_balance}}
-    if new_balance >= card['spending_limit']:
-        update_doc['$unset'] = {'repayment_due_date': ""}
+    # Check if total debt cleared for the card to unset due date
+    updated_card = cards_col.find_one({'id': card_id})
+    if updated_card.get('debt', 0) <= 0:
+        cards_col.update_one({'id': card_id}, {'$unset': {'repayment_due_date': ""}, '$set': {'debt': 0.0}})
         
-    cards_col.update_one({'id': card_id}, update_doc)
     log_activity(current_user['id'], "CARD_REPAYMENT", f"Repaid ₹{amount} towards Card ending in {card['card_number'][-4:]}")
     
-    return jsonify({"message": "Payment applied to card successfully."})
+    # Create transaction log for the feed
+    transactions_col.insert_one({
+        "id": generate_id(), "customer_id": current_user['id'], "customer_name": current_user['name'],
+        "merchant_name": "NexusPay (Repay)", "amount": amount, "type": "Repayment", "status": "Completed",
+        "date": datetime.datetime.utcnow().isoformat()
+    })
+    
+    return jsonify({"message": "Payment applied. Debt cleared, balance will refresh next month."})

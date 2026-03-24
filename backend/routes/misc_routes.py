@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import notifications_col, users_col, cards_col, transactions_col, client
-from utils import token_required
-import os
+from utils import token_required, check_refresh
+import os, datetime
 
 misc_bp = Blueprint('misc', __name__)
 
@@ -23,7 +23,10 @@ def get_dashboard_full(current_user):
     }
     
     if current_user['role'] == 'Customer':
-        res["cards"] = list(cards_col.find({"user_id": current_user['id']}, {"_id": 0}))
+        cards = list(cards_col.find({"user_id": current_user['id']}, {"_id": 0}))
+        for card in cards:
+            check_refresh(card)
+        res["cards"] = cards
         res["transactions"] = list(transactions_col.find({"customer_id": current_user['id']}, {"_id": 0}).sort("date", -1).limit(10))
         res["merchants"] = list(users_col.find({"role": "Merchant", "status": "Active"}, {"_id": 0, "id": 1, "name": 1}))
     
@@ -45,8 +48,7 @@ def get_dashboard_full(current_user):
             "total_active_users": total_users,
             "total_active_cards": active_cards,
             "flagged_transactions": transactions_col.count_documents({'status': 'Flagged'}),
-            "total_credit_extended": 0.0, # Computed on demand or simplified
-            "total_owed_back": 0.0
+            "total_debt_owed": sum(c.get('debt', 0) for c in cards_col.find({'status': 'Active'}))
         }
         res["users"] = list(users_col.find({'role': {'$ne': 'Admin'}}, {'_id': 0, 'password': 0}).sort('created_at', -1).limit(50))
         res["cards"] = list(cards_col.find({}, {'_id': 0}).sort('id', -1).limit(50))
