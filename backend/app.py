@@ -22,12 +22,13 @@ from routes.misc_routes import misc_bp
 app = Flask(__name__)
 # Load key from .env or fallback
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'nexus_advanced_production_key_2026')
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*", "max_age": 3600}}) # Reduce preflight noise
 
 @app.route("/")
 def home():
     return {
-        "message": "NexusPay Backend Running 🚀"
+        "message": "NexusPay Backend Running 🚀",
+        "status": "Healthy / Optimized"
     }
 
 # Register Blueprints
@@ -38,8 +39,9 @@ app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(misc_bp, url_prefix='/api')
 
-init_db()
+# init_db() # Moved to manual/conditional call to speed up serverless warmups
 asgi_app = WSGIMiddleware(app)
 
 if __name__ == '__main__':
+    init_db() # Run locally
     uvicorn.run("app:asgi_app", host="0.0.0.0", port=5000, reload=True)

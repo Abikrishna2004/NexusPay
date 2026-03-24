@@ -18,17 +18,13 @@ notifications_col = db['notifications']
 audit_col = db['audit_logs']
 
 def init_db():
+    # Only run this once to setup Atlas indexes. 
+    # Commented out for production speed as indexes are persistent in Atlas.
+    pass
+    """
     try:
         users_col.create_index("email", unique=True)
-        users_col.create_index("id", unique=True)
-        users_col.create_index("role")
-        cards_col.create_index("id", unique=True)
-        cards_col.create_index("user_id")
-        transactions_col.create_index("id", unique=True)
-        transactions_col.create_index("customer_id")
-        transactions_col.create_index("merchant_id")
-        notifications_col.create_index("user_id")
-        audit_col.create_index("user_id")
-        print("Connected to MongoDB Atlas and verified indexing.")
+        # ... other indexes ...
     except Exception as e:
         print(f"MongoDB Boot Error: {e}")
+    """

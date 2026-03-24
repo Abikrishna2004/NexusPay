@@ -31,35 +31,33 @@ export default function Dashboard({ user, onLogout }) {
 
     const loadData = async () => {
         try {
-            const [proRes, notifsRes] = await Promise.all([
-                api.get('/users/profile'),
-                api.get('/notifications')
-            ]);
-            setProfile(proRes.data);
-            setProfileForm({ phone: proRes.data.phone || '', address: proRes.data.address || '', avatar: proRes.data.avatar || '' });
-            setNotifications(notifsRes.data);
+            const res = await api.get('/dashboard/full');
+            const data = res.data;
+            
+            setProfile(data.profile);
+            if (data.profile) {
+                setProfileForm({ 
+                    phone: data.profile.phone || '', 
+                    address: data.profile.address || '', 
+                    avatar: data.profile.avatar || '' 
+                });
+            }
+            setNotifications(data.notifications || []);
 
             if (user.role === 'Admin') {
-                const [statRes, txRes, usrRes, crdRes] = await Promise.all([
-                    api.get('/admin/stats'), api.get('/transactions'), api.get('/admin/users'), api.get('/cards')
-                ]);
-                setStats(statRes.data);
-                setTransactions(txRes.data);
-                setAdminUsers(usrRes.data);
-                setCards(crdRes.data);
+                setStats(data.stats);
+                setTransactions(data.transactions || []);
+                setAdminUsers(data.users || []);
+                setCards(data.cards || []);
             } else if (user.role === 'Customer') {
-                const [cardRes, txRes, merchRes] = await Promise.all([
-                    api.get('/cards'), api.get('/transactions'), api.get('/merchants')
-                ]);
-                setCards(cardRes.data);
-                setTransactions(txRes.data);
-                setMerchants(merchRes.data);
-                if (cardRes.data.length > 0) {
-                    setPaymentForm(p => ({ ...p, card_id: cardRes.data[0].id }));
+                setCards(data.cards || []);
+                setTransactions(data.transactions || []);
+                setMerchants(data.merchants || []);
+                if (data.cards?.length > 0) {
+                    setPaymentForm(p => ({ ...p, card_id: data.cards[0].id }));
                 }
             } else if (user.role === 'Merchant') {
-                const txRes = await api.get('/transactions');
-                setTransactions(txRes.data);
+                setTransactions(data.transactions || []);
             }
         } catch (err) {
             console.error(err);
