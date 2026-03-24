@@ -646,7 +646,7 @@ th {
     max-width: 100% !important;
   }
 
-  .glass-panel:not([style*='absolute']) {
+  .glass-panel:not(.nav-dropdown) {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto;
@@ -749,11 +749,17 @@ table {
 
 @media (max-width: 480px) {
   .notif-panel {
-    width: 280px;
-    right: -60px; /* Shift left to avoid edge clash */
+    width: calc(100vw - 30px);
+    max-width: 320px;
+    left: 50%; /* Center against viewport */
+    right: auto;
+    transform: translateX(-50%);
+    position: fixed; /* Fixed is often better for full-width overlays on mobile */
+    top: 70px;
   }
   
   .profile-panel {
-    right: 0;
+    right: -10px;
+    width: 200px;
   }
 }
